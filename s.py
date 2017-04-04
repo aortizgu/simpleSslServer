@@ -1,26 +1,4 @@
 #!/usr/local/bin/python
-
-'''
-Simple and functional REST server for Python (2.7) using no dependencies beyond the Python standard library.
-Features:
-* Map URI patterns using regular expressions
-* Map any/all the HTTP VERBS (GET, PUT, DELETE, POST)
-* All responses and payloads are converted to/from JSON for you
-* Easily serve static files: a URI can be mapped to a file, in which case just GET is supported
-* You decide the media type (text/html, application/json, etc.)
-* Correct HTTP response codes and basic error messages
-* Simple REST client included! use the rest_call_json() method
-As an example, let's support a simple key/value store. To test from the command line using curl:
-curl "http://localhost:8080/records"
-curl -X PUT -d '{"name": "Tal"}' "http://localhost:8080/record/1"
-curl -X PUT -d '{"name": "Shiri"}' "http://localhost:8080/record/2"
-curl "http://localhost:8080/records"
-curl -X DELETE "http://localhost:8080/record/2"
-curl "http://localhost:8080/records"
-Create the file web/index.html if you'd like to test serving static files. It will be served from the root URI.
-@author: Tal Liron (tliron @ github.com)
-'''
-
 import sys
 import os
 import re
@@ -33,7 +11,6 @@ import ssl
 import base64
 import urlparse
 
-# Fix issues with decoding HTTP responses
 reload(sys)
 sys.setdefaultencoding('utf8')
 
