@@ -1,10 +1,17 @@
 [{
-        "userName": "paco@urjc.es",
-        "password": "paco1234"
+        "user": "adrian@urjc.es",
+        "password": "adrian1234"
     },
     {
-        "userName": "luis@urjc.es",
+        "user": "mari@urjc.es",
+        "password": "mari1234"
+    },
+    {
+        "user": "luis@urjc.es",
         "password": "luis1234"
+    },
+    {
+        "user": "venancio@urjc.es",
+        "password": "venancio1234"
     }
-
 ]

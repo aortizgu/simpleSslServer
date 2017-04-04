@@ -31,6 +31,7 @@ import urllib2
 import BaseHTTPServer
 import ssl
 import base64
+import urlparse
 
 # Fix issues with decoding HTTP responses
 reload(sys)
@@ -38,27 +39,64 @@ sys.setdefaultencoding('utf8')
 
 here = os.path.dirname(os.path.realpath(__file__))
 
-fData = open(os.path.join(here, "data/dataUsers.json"))
-records = json.load(fData)
+fData = open(os.path.join(here, "data/data.json"))
+data = json.load(fData)
 fData.close()
+
+fRecords = open(os.path.join(here, "data/records.json"))
+records = json.load(fRecords)
+fRecords.close()
 
 fUsers = open(os.path.join(here, "data/users.json"))
 users = json.load(fUsers)
 fUsers.close()
 
-def get_records(handler):
-    return records
+def valid_user(username):
+    for user in users:
+        if username == user['user']:
+            return True
+    return False
+    
+def valid_password(username, password):
+    for user in users:
+        if username == user['user']:
+            if password == user['password']:
+                return True
+    return False
+
+def get_data(handler):
+    return data
+
+def get_data_version(handler):
+    ret = {}
+    ret['version'] = data['version']
+    return ret
 
 def get_users(handler):
-    print handler.path
-    return users
+    print "get_user::"
+    ret = {}
+    ret['found'] = False
+    ret['valid'] = False
+    parsed = urlparse.urlparse(handler.path)
+    if 'id' in urlparse.parse_qs(parsed.query):
+        print urlparse.parse_qs(parsed.query)
+        user = urlparse.parse_qs(parsed.query)['id'][0]
+        user = user.split(':')
+        if valid_user(user[0]):
+            ret['found'] = True
+            if valid_password(user[0], user[1]):
+                ret['valid'] = True
+    return ret
 
 def set_user(handler):
+    print "set_user::"
     print handler.path
+    parsed = urlparse.urlparse(handler.path)
+    print urlparse.parse_qs(parsed.query)['id']
     return users
 
 def delete_user(handler):
-    print handler.
+    print handler.payload
     return users
 
 def get_record(handler):
@@ -107,7 +145,8 @@ class RESTRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.routes = {
             r'^/$': {'file': 'web/index.html', 'media_type': 'text/html'},
             r'^/users$': {'GET': get_users, 'PUT': set_user, 'DELETE': delete_user, 'media_type': 'application/json'},
-            r'^/records$': {'GET': get_records, 'media_type': 'application/json'},
+            r'^/data$': {'GET': get_data, 'media_type': 'application/json'},
+            r'^/data_version$': {'GET': get_data_version, 'media_type': 'application/json'},
             r'^/record/': {'GET': get_record, 'PUT': set_record, 'DELETE': delete_record, 'media_type': 'application/json'}}
         
         return BaseHTTPServer.BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
@@ -188,15 +227,15 @@ class RESTRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def get_route(self):
         for path, route in self.routes.iteritems():
-            if re.match(path, self.path):
+            if re.match(path, self.path.split("?")[0]):
                 return route
         return None
 
 def rest_server(port):
     'Starts the REST server'
     http_server = BaseHTTPServer.HTTPServer(('', port), RESTRequestHandler)
-    http_server.socket = ssl.wrap_socket(http_server.socket, keyfile="certs/key.pem",
-        certfile='certs/cert.pem', server_side=True)
+    http_server.socket = ssl.wrap_socket(http_server.socket, keyfile="certs/server/privkey.pem",
+        certfile='certs/server/cert.pem', server_side=True)
 
     print 'Starting HTTP server at port %d' % port
     try:

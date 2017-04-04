@@ -1,0 +1,58 @@
+{
+    "version": 8,
+    "students": [{
+            "mail": "adrian@urjc.es",
+            "name": "Adrián Ortiz Gutiérrez",
+            "degree": "Ingenieria Telemática",
+            "subjects": "laboratorio_administracion_redes_ordenadores sistemas_distribuidos sistemas_operativos"
+        },
+        {
+            "mail": "luis@urjc.es",
+            "name": "Luis Ortiz Jareño",
+            "degree": "Ingeniería de Sistemas de Telecomunicaciones",
+            "subjects": "robotica laboratorio_administracion_redes_ordenadores"
+        },
+        {
+            "mail": "mari@urjc.es",
+            "name": "María Cruz",
+            "degree": "Sistemas de Telecomunicaciones",
+            "subjects": "sistemas_operativos arquitectura_de_computadores"
+        },
+        {
+            "mail": "venancio@urjc.es",
+            "name": "Venancio Romero Moreno",
+            "degree": "Ingenieria Telemática",
+            "subjects": "arquitectura_de_computadores laboratorio_administracion_redes_ordenadores"
+        }
+    ],
+    "subjects": [{
+            "id": "laboratorio_administracion_redes_ordenadores",
+            "name": "Laboratorio de Administración de redes de ordenadores",
+            "classroom": "A355",
+            "schedule": "monday_2 tuesday_1 wednesday_2 thursday_2 friday_2"
+        }, {
+            "id": "robotica",
+            "name": "Robótica",
+            "classroom": "A111",
+            "schedule": "monday_1 tuesday_6 wednesday_4 thursday_2 friday_1"
+        },
+        {
+            "id": "sistemas_distribuidos",
+            "name": "Sistemas Distribuidos",
+            "classroom": "A131",
+            "schedule": "monday_4 tuesday_3 wednesday_1 wednesday_2 thursday_6 friday_5"
+        },
+        {
+            "id": "sistemas_operativos",
+            "name": "Sistemas Operativos",
+            "classroom": "A231",
+            "schedule": "monday_3 tuesday_2 wednesday_1 thursday_1 friday_3"
+        },
+        {
+            "id": "arquitectura_de_computadores",
+            "name": "Arquitecture de Computadores",
+            "classroom": "A231",
+            "schedule": "monday_6 tuesday_4 wednesday_5 thursday_1 friday_4"
+        }
+    ]
+}
