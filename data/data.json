@@ -1,5 +1,5 @@
 {
-    "version": 8,
+    "version": 9,
     "students": [{
             "mail": "adrian@urjc.es",
             "name": "Adrián Ortiz Gutiérrez",
@@ -10,7 +10,7 @@
             "mail": "luis@urjc.es",
             "name": "Luis Ortiz Jareño",
             "degree": "Ingeniería de Sistemas de Telecomunicaciones",
-            "subjects": "robotica laboratorio_administracion_redes_ordenadores"
+            "subjects": "robotica laboratorio_administracion_redes_ordenadores arquitectura_de_computadores"
         },
         {
             "mail": "mari@urjc.es",
