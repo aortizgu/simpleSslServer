@@ -1,4 +1,8 @@
 [{
+        "user": "a",
+        "password": "a"
+    },
+    {
         "user": "adrian@urjc.es",
         "password": "adrian1234"
     },

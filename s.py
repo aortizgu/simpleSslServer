@@ -10,6 +10,7 @@ import BaseHTTPServer
 import ssl
 import base64
 import urlparse
+import math
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -20,20 +21,30 @@ fData = open(os.path.join(here, "data/data.json"))
 data = json.load(fData)
 fData.close()
 
-fRecords = open(os.path.join(here, "data/records.json"))
-records = json.load(fRecords)
-fRecords.close()
-
 fUsers = open(os.path.join(here, "data/users.json"))
 users = json.load(fUsers)
 fUsers.close()
+
+def haversine(lat1, lon1, lat2, lon2):
+    rad=math.pi/180
+    dlat=lat2-lat1
+    dlon=lon2-lon1
+    R=6372.795477598
+    a=(math.sin(rad*dlat/2))**2 + math.cos(rad*lat1)*math.cos(rad*lat2)*(math.sin(rad*dlon/2))**2
+    distancia=2*R*math.asin(math.sqrt(a))
+    return distancia
+
+def save_data():
+    data['version'] = data['version'] + 1
+    with open("data/data.json", "w") as outfile:
+        json.dump(data, outfile, indent=4)
 
 def valid_user(username):
     for user in users:
         if username == user['user']:
             return True
     return False
-    
+
 def valid_password(username, password):
     for user in users:
         if username == user['user']:
@@ -73,23 +84,43 @@ def set_user(handler):
     return users
 
 def delete_user(handler):
-    print handler.payload
+    print handler.get_payload()
     return users
 
-def get_record(handler):
-    key = urllib.unquote(handler.path[8:])
-    return records[key] if key in records else None
+def post_record(handler):
+    print "post_record::"
+    record = handler.get_payload()
+    print record
+    data['records'].append(record)
+    save_data()
+    return data
 
-def set_record(handler):
-    key = urllib.unquote(handler.path[8:])
-    payload = handler.get_payload()
-    records[key] = payload
-    return records[key]
+def post_photo(handler):
+    print "post_photo::"
+    print handler.path
+    ret = None
+    parsed = urlparse.urlparse(handler.path)
+    if 'id' in urlparse.parse_qs(parsed.query):
+        print urlparse.parse_qs(parsed.query)
+        photo_name = 'images/'
+        photo_name += urlparse.parse_qs(parsed.query)['id'][0]
+        f = open(photo_name, 'w')
+        f.write(handler.get_payload_raw())
+        f.close()
+        ret = True
+    return ret
 
-def delete_record(handler):
-    key = urllib.unquote(handler.path[8:])
-    del records[key]
-    return True # anything except None shows success
+def post_search(handler):
+    print "post_search::"
+    ret = []
+    search = handler.get_payload()
+    print search
+    for record in data['records']:
+        dist = haversine(record['lat'], record['lng'], search['lat'], search['lng'])
+        print "dist(", dist, ")-> (", record['lat'], ", ", record['lng'], ") (", search['lat'], ", ", search['lng'], ")"
+        if dist <= search['radious']:
+            ret.append(record)
+    return ret
 
 def rest_call_json(url, payload=None, with_payload_method='PUT'):
     'REST call with JSON decoding of the response and JSON payloads'
@@ -121,16 +152,19 @@ class RESTRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         self.routes = {
             r'^/$': {'file': 'web/index.html', 'media_type': 'text/html'},
+            r'^/images$': {'file': 'images', 'media_type': 'image/jpg'},
             r'^/users$': {'GET': get_users, 'PUT': set_user, 'DELETE': delete_user, 'media_type': 'application/json'},
             r'^/data$': {'GET': get_data, 'media_type': 'application/json'},
             r'^/data_version$': {'GET': get_data_version, 'media_type': 'application/json'},
-            r'^/record/': {'GET': get_record, 'PUT': set_record, 'DELETE': delete_record, 'media_type': 'application/json'}}
-        
+            r'^/record': {'POST': post_record, 'media_type': 'application/json'},
+            r'^/search': {'POST': post_search, 'media_type': 'application/json'},
+            r'^/photo': {'POST': post_photo, 'media_type': 'image/jpg'}}
+
         return BaseHTTPServer.BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
-    
+
     def do_HEAD(self):
         self.handle_method('HEAD')
-    
+
     def do_GET(self):
         self.handle_method('GET')
 
@@ -142,13 +176,18 @@ class RESTRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         self.handle_method('DELETE')
-    
+
     def get_payload(self):
         payload_len = int(self.headers.getheader('content-length', 0))
         payload = self.rfile.read(payload_len)
         payload = json.loads(payload)
         return payload
-        
+
+    def get_payload_raw(self):
+        payload_len = int(self.headers.getheader('content-length', 0))
+        payload = self.rfile.read(payload_len)
+        return payload
+
     def handle_method(self, method):
         route = self.get_route()
         if route is None:
@@ -165,7 +204,12 @@ class RESTRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if 'file' in route:
                     if method == 'GET':
                         try:
-                            f = open(os.path.join(here, route['file']))
+                            filename = os.path.join(here, route['file'])
+                            parsed = urlparse.urlparse(self.path)
+                            if 'id' in urlparse.parse_qs(parsed.query):
+                                filename += '/'
+                                filename += urlparse.parse_qs(parsed.query)['id'][0]
+                            f = open(filename)
                             try:
                                 self.send_response(200)
                                 if 'media_type' in route:
@@ -200,8 +244,8 @@ class RESTRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         self.send_response(405)
                         self.end_headers()
                         self.wfile.write(method + ' is not supported\n')
-                    
-    
+
+
     def get_route(self):
         for path, route in self.routes.iteritems():
             if re.match(path, self.path.split("?")[0]):
